@@ -14,13 +14,11 @@ import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
-load_dotenv()
-
+load_dotenv(r"C:\\Users\\SRISAYEE\\Desktop\\Sai\\Coding\\OreHack\\Frontend\\OREHACK\\.env")
 
 def get_supabase_client() -> Client:
-    url = os.environ.get("SUPABASE_URL", "").strip()
+    url = os.environ.get("VITE_SUPABASE_URL", "").strip()
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-
     if not url:
         raise EnvironmentError(
             "SUPABASE_URL not set. Add to .env: SUPABASE_URL=https://xxxx.supabase.co"

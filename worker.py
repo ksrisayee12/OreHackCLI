@@ -31,10 +31,10 @@ from main import run_pipeline
 
 # ─── Config ────────────────────────────────────────────────────────────────────
 
-TABLE          = "submissions"
+TABLE          = "Submissions"
 POLL_INTERVAL  = 10        # seconds between polls when idle
 BATCH_SIZE     = 5         # max rows to fetch per poll (process one by one)
-ERROR_BEHAVIOR = "incomplete"   # what to set Progress to on failure: 'incomplete' or 'rejected'
+ERROR_BEHAVIOR = "queued"   # what to set Progress to on failure: 'incomplete' or 'rejected'
 
 # ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ def fetch_incomplete_rows() -> list:
         response = (
             supabase.table(TABLE)
             .select("teamID, Team_Name, Repo_URL, Problem_Statement")
-            .eq("Progress", "incomplete")
+            .eq("Progress", "queued")
             .limit(BATCH_SIZE)
             .execute()
         )
@@ -104,7 +104,7 @@ def claim_row(team_id: str) -> bool:
             supabase.table(TABLE)
             .update({"Progress": "processing"})
             .eq("teamID", team_id)
-            .eq("Progress", "incomplete")   # ← race condition guard
+            .eq("Progress", "queued")   # ← race condition guard
             .execute()
         )
         # If data is empty, another worker already claimed this row
@@ -187,7 +187,7 @@ def process_row(row: dict):
 # ─── Main polling loop ─────────────────────────────────────────────────────────
 
 def run_worker():
-    log("Worker started. Polling for incomplete submissions...")
+    log("Worker started. Polling for queued submissions...")
     log(f"  Table:         {TABLE}")
     log(f"  Poll interval: {POLL_INTERVAL}s")
     log(f"  Batch size:    {BATCH_SIZE}")
@@ -201,14 +201,14 @@ def run_worker():
 
         if not rows:
             consecutive_empty += 1
-            if consecutive_empty == 1 or consecutive_empty % 12 == 0:
+            if consecutive_empty == 1 or consecutive_empty % 3 == 0:
                 # Log every 2 minutes of idle (12 × 10s) to show we're alive
-                log(f"No incomplete rows. Waiting... (idle for ~{consecutive_empty * POLL_INTERVAL}s)")
+                log(f"No queued rows. Waiting... (idle for ~{consecutive_empty * POLL_INTERVAL}s)")
             time.sleep(POLL_INTERVAL)
             continue
 
         consecutive_empty = 0
-        log(f"Found {len(rows)} incomplete row(s).")
+        log(f"Found {len(rows)} queued row(s).")
 
         for row in rows:
             team_id = row.get("teamID")
