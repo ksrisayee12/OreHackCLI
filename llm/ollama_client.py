@@ -6,13 +6,13 @@ PRIMARY_MODEL  = "deepseek-coder:6.7b"
 REVIEWER_MODEL = "deepseek-coder:6.7b"
 
 
-def call_ollama(prompt, model=None, retries=2, timeout=120, num_predict=280, num_ctx=2048):
+def call_ollama(prompt, model=None, retries=2, timeout=180, num_predict=512, num_ctx=2048):
     """
-    num_predict=280  — enough for full kv output including complete summary sentences.
-                       At 3 tok/s CPU = 93s < 120s timeout.
-                       Previously 200 caused summary truncation mid-sentence.
-    timeout=120      — safe ceiling per attempt.
-    retries=2        — 2 * 120s = 240s max wait.
+    num_predict=512  — enough for full kv output including reasoning + all 5 score lines.
+                       At 3 tok/s CPU = 171s < 180s timeout.
+                       Previously 280 caused Pass 2 to cut off before all score fields.
+    timeout=180      — safe ceiling per attempt (was 120).
+    retries=2        — 2 * 180s = 360s max wait.
     num_ctx=2048     — all prompts are under 500 input tokens.
     """
     if model is None:

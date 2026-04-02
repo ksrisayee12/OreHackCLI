@@ -43,7 +43,7 @@ def _is_security_tool(context, tech_keys, tech_detail):
             for lib in libs:
                 if any(kw in lib.lower() for kw in SCANNER_KEYWORDS): return True
     mg = context.get("module_graph_summary", {})
-    if sum(1 for i in mg.get("most_imported", []) if i in TOOL_IMPORTS) >= 2:
+    if sum(1 for i in mg.get("most_imported", []) if i in TOOL_IMPORTS) >= 3:
         return True
     for fn in context.get("call_graph_summary", {}).get("most_called", []):
         if any(kw in fn.lower() for kw in SCANNER_KEYWORDS): return True
@@ -323,7 +323,8 @@ functionality=
 tech_stack_efficiency=
 code_quality_modularity=
 code_readability=
-documentation="""
+documentation= (3-9/10)
+"""
 
 
 def _parse_kv_to_scores(raw, anchors):
